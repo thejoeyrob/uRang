@@ -1,32 +1,44 @@
-uRang PWA — v1.4.0
+uRang PWA — v1.5.0
 A JW EDS product
 
-THIS IS THE IPHONE-FRIENDLY PWA BUILD
+USER FLOW
+Paste number > Search.
 
-Install behaviour
-- Browser/Safari view is an install screen only.
-- Add uRang to the Home Screen and launch it from the icon to use the app.
-- The icon uses the full uRang wordmark.
+1. uRang identifies the number country locally.
+2. The most relevant configured reverse-directory route is checked FIRST.
+3. If an identity is returned, uRang shows the short result and only offers:
+      Search deeper
+      Search again
+4. "Search deeper" reveals:
+      Recheck directory
+      Check WhatsApp
+      Research online
+5. If the directory returns no identity or is unavailable, the fallback actions
+   appear automatically:
+      Refresh directory & retry
+      Check WhatsApp
+      Research online
 
-What works without any paid service
-- Paste/type a missed-call number.
-- Domestic/international normalisation.
-- Country of origin.
-- UK mobile/landline/service classification.
-- Selected UK geographic landline area hints.
-- Previous-search memory and Recent list stored only on the device.
-- Previous result appears before Search when the number is recognised.
-- WhatsApp handoff for the user's manual name/photo check.
-- Exact-number public web research using both international and local forms.
-- Offline app shell after first load.
-- About page with JW EDS branding and version.
+DIRECTORY REFRESH
+- uRang keeps a small device-side cache of prior directory responses.
+- Positive matches default to 7 days.
+- Negative matches default to 12 hours.
+- A lightweight directory route/status check can refresh when the app opens.
+- "Refresh directory & retry" bypasses the cached lookup.
+- uRang does NOT download a full identity directory onto the iPhone.
 
-Automatic reverse lookup
-config.js contains lookupApi. Leave it blank for the static version. When a server-side reverse-lookup endpoint is available, set the HTTPS URL there. uRang will then call it automatically during the same single Search action and merge the result into the concise result screen. No redesign is required.
+WHY
+A full directory would be large, stale, licensing-sensitive, and unreliable in
+iPhone PWA storage. Country-routed live lookup is lighter and more current.
 
-Important iPhone limitation
-Installed iPhone PWAs cannot search the user's Contacts database. That is the only major local capability deliberately omitted. A later native/App Store uRang build can add Contacts permission while retaining this interface.
+LIVE REVERSE LOOKUP
+The app-side call is built in, but a directory provider cannot safely be called
+with a secret API key directly from public JavaScript. Deploy the included
+backend-lookup-worker.js, add a provider key server-side, then set lookupApi in
+config.js.
 
-HOSTING
-Upload ALL files from this ZIP to the same HTTPS folder. GitHub Pages, Cloudflare Pages or Netlify are suitable static hosts.
-On iPhone: open the URL in Safari > Share > Add to Home Screen > Open as Web App > Add.
+See BACKEND_SETUP.txt.
+
+IPHONE LIMITATION
+A PWA cannot enumerate the iPhone Contacts database. The native version can add
+that permission later without changing the uRang user experience.

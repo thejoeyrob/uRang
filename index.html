@@ -100,9 +100,9 @@
         <div class="wordmark">uRang</div>
       </div>
       <p class="about-tagline">Know before you call back.</p>
-      <p class="version">Version 1.4.0 · PWA</p>
+      <p class="version">Version 1.5.0 · PWA</p>
       <div class="fine-rule"></div>
-      <p class="about-copy">A fast, privacy-minded way to understand an unfamiliar caller using number intelligence, previous searches and public information.</p>
+      <p class="about-copy">A fast, privacy-minded way to understand an unfamiliar caller. uRang checks the most relevant directory first, using the number’s country of origin, then offers deeper research only when you ask for it.</p>
       <p class="about-note">On iPhone, web apps cannot search your Contacts. A future native uRang version can add that permission without changing this experience.</p>
       <div class="jw-brand"><p>Built by</p><img src="jw-eds-white.png" alt="JW EDS"><strong>JW EDS</strong></div>
       <p class="about-foot">A JW EDS product · Privacy by design</p>
@@ -127,8 +127,15 @@
     </div>
 
     <div class="result-actions">
-      <button id="whatsappButton" class="text-action" type="button">Check WhatsApp</button>
-      <button id="webResearchButton" class="text-action" type="button">Research online</button>
+      <button id="searchDeeperButton" class="text-action hidden" type="button">Search deeper</button>
+
+      <div id="fallbackActions" class="deeper-actions hidden">
+        <p id="fallbackLabel" class="deeper-label">No directory identity found.</p>
+        <button id="refreshDirectoryButton" class="text-action" type="button">Refresh directory & retry</button>
+        <button id="whatsappButton" class="text-action" type="button">Check WhatsApp</button>
+        <button id="webResearchButton" class="text-action" type="button">Research online</button>
+      </div>
+
       <button id="searchAgain" class="text-action quieter" type="button">Search again</button>
     </div>
   </section>

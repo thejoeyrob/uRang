@@ -10,7 +10,7 @@ const els = {
   aboutButton:document.querySelector('#aboutButton'), historyButton:document.querySelector('#historyButton'), countryList:document.querySelector('#countryList'), historyList:document.querySelector('#historyList'),
   resultNumber:document.querySelector('#resultNumber'), resultEyebrow:document.querySelector('#resultEyebrow'), resultTitle:document.querySelector('#resultTitle'), resultLocation:document.querySelector('#resultLocation'),
   resultType:document.querySelector('#resultType'), resultSource:document.querySelector('#resultSource'), resultConfidence:document.querySelector('#resultConfidence'), whatsappButton:document.querySelector('#whatsappButton'),
-  webResearchButton:document.querySelector('#webResearchButton'), searchAgain:document.querySelector('#searchAgain')
+  webResearchButton:document.querySelector('#webResearchButton'), searchAgain:document.querySelector('#searchAgain'), searchDeeperButton:document.querySelector('#searchDeeperButton'), fallbackActions:document.querySelector('#fallbackActions'), fallbackLabel:document.querySelector('#fallbackLabel'), refreshDirectoryButton:document.querySelector('#refreshDirectoryButton')
 };
 let deferredInstallPrompt=null, currentInfo=null;
 
@@ -33,11 +33,192 @@ function saveHistory(item){const items=history().filter(x=>x.e164!==item.e164);i
 function findHistory(info){return info?history().find(x=>x.e164===info.e164)||null:null}
 function historySummary(item){return item.title||item.type||item.location||'Previous lookup'}
 function updateInputState(){currentInfo=normalizeNumber(els.phoneInput.value);const has=currentInfo&&currentInfo.valid;els.searchButton.disabled=!has;els.clearInput.classList.toggle('hidden',!els.phoneInput.value);const old=has?findHistory(currentInfo):null;if(old){els.previousResult.innerHTML=`Previous search · <strong>${escapeHtml(historySummary(old))}</strong>`;els.previousResult.classList.remove('hidden')}else els.previousResult.classList.add('hidden');if(has){els.numberHint.textContent=`${currentInfo.country.flag} ${numberType(currentInfo)} · ${numberLocation(currentInfo)}`;els.numberHint.classList.remove('hidden')}else els.numberHint.classList.add('hidden')}
-function baseResult(info){return{e164:info.e164,display:formatDisplay(info),title:'Unknown caller',eyebrow:'Number details',location:numberLocation(info),type:numberType(info),source:'No identity has been confirmed.',confidence:'',found:false,allowWhatsApp:true,allowWeb:true,date:Date.now()}}
-async function automaticLookup(info){const endpoint=String(CONFIG.lookupApi||'').trim();if(!endpoint)return null;try{const controller=new AbortController();const t=setTimeout(()=>controller.abort(),6500);const r=await fetch(endpoint,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({e164:info.e164,national:info.national,country:info.country.code}),signal:controller.signal});clearTimeout(t);if(!r.ok)throw new Error('lookup');return await r.json()}catch(e){return null}}
-function mergeOnline(base,data){if(!data)return base;return{...base,title:data.title||base.title,eyebrow:data.found?'Likely match':'Number details',location:data.location||base.location,type:data.type||base.type,source:data.source||base.source,confidence:data.confidence||'',found:Boolean(data.found),date:Date.now()}}
-function renderResult(item){els.resultNumber.textContent=item.display||item.e164;els.resultEyebrow.textContent=item.eyebrow||'Number details';els.resultTitle.textContent=item.title||'Unknown caller';els.resultLocation.textContent=item.location||'';els.resultType.textContent=item.type||'';els.resultSource.textContent=item.source||'';els.resultConfidence.textContent=item.confidence||''}
-async function doSearch(){const info=normalizeNumber(els.phoneInput.value);if(!info||!info.valid)return;currentInfo=info;const old=findHistory(info),base=old?{...baseResult(info),...old,date:Date.now()}:baseResult(info);els.searchButton.disabled=true;const label=els.searchButton.querySelector('span:first-child');const original=label.textContent;label.textContent='Checking…';const online=await automaticLookup(info);const item=mergeOnline(base,online);if(!online&&!old)item.source='Number interpreted. No automatic directory service is connected yet.';saveHistory(item);renderResult(item);showScreen(els.result);label.textContent=original;updateInputState()}
+function baseResult(info){return{e164:info.e164,display:formatDisplay(info),title:'Unknown caller',eyebrow:'Directory check',location:numberLocation(info),type:numberType(info),source:'Checking the most relevant directory for this number.',confidence:'',found:false,lookupState:'pending',date:Date.now()}}
+
+function directoryCache(){try{return JSON.parse(localStorage.getItem('urang_directory_cache')||'{}')}catch(e){return{}}}
+function cacheHoursFor(data){return data&&data.found?Number(CONFIG.positiveCacheHours||168):Number(CONFIG.negativeCacheHours||12)}
+function getCachedDirectory(info){
+  const cache=directoryCache(),entry=cache[info.e164];
+  if(!entry||!entry.savedAt||!entry.data)return null;
+  const maxAge=cacheHoursFor(entry.data)*3600000;
+  if(Date.now()-entry.savedAt>maxAge)return null;
+  return entry.data;
+}
+function saveDirectoryCache(info,data){
+  if(!data)return;
+  const cache=directoryCache();
+  cache[info.e164]={savedAt:Date.now(),country:info.country.code,data};
+  const keys=Object.keys(cache).sort((a,b)=>(cache[b].savedAt||0)-(cache[a].savedAt||0)).slice(0,100);
+  const trimmed={};keys.forEach(k=>trimmed[k]=cache[k]);
+  localStorage.setItem('urang_directory_cache',JSON.stringify(trimmed));
+}
+
+function statusUrl(){
+  const direct=String(CONFIG.directoryStatusApi||'').trim();
+  if(direct)return direct;
+  const lookup=String(CONFIG.lookupApi||'').trim();
+  if(!lookup)return'';
+  try{const u=new URL(lookup);u.pathname=u.pathname.replace(/\/lookup\/?$/,'/status');return u.toString()}catch{return''}
+}
+async function refreshDirectoryStatus(force=false){
+  const endpoint=statusUrl();
+  if(!endpoint)return null;
+  const key='urang_directory_status';
+  try{
+    const existing=JSON.parse(localStorage.getItem(key)||'null');
+    if(!force&&existing&&Date.now()-(existing.checkedAt||0)<24*3600000)return existing;
+  }catch(e){}
+  try{
+    const u=new URL(endpoint);
+    u.searchParams.set('country',homeCountry().code);
+    if(force)u.searchParams.set('refresh','1');
+    const controller=new AbortController();
+    const t=setTimeout(()=>controller.abort(),3500);
+    const r=await fetch(u.toString(),{headers:{'accept':'application/json'},signal:controller.signal,cache:'no-store'});
+    clearTimeout(t);
+    if(!r.ok)return null;
+    const data=await r.json();
+    const stored={...data,checkedAt:Date.now()};
+    localStorage.setItem(key,JSON.stringify(stored));
+    return stored;
+  }catch(e){return null}
+}
+
+async function automaticLookup(info,{refresh=false}={}){
+  const endpoint=String(CONFIG.lookupApi||'').trim();
+  if(!endpoint)return{serviceConfigured:false,found:false,status:'unconfigured'};
+
+  if(!refresh){
+    const cached=getCachedDirectory(info);
+    if(cached)return{...cached,fromCache:true,serviceConfigured:true};
+  }
+
+  try{
+    const controller=new AbortController();
+    const t=setTimeout(()=>controller.abort(),7000);
+    const r=await fetch(endpoint,{
+      method:'POST',
+      headers:{'content-type':'application/json','accept':'application/json'},
+      body:JSON.stringify({
+        e164:info.e164,
+        national:info.national,
+        country:info.country.code,
+        refresh:Boolean(refresh),
+        strategy:'directory-first'
+      }),
+      signal:controller.signal,
+      cache:'no-store'
+    });
+    clearTimeout(t);
+    if(!r.ok)throw new Error('lookup');
+    const data=await r.json();
+    const result={...data,serviceConfigured:true,status:data.found?'found':'not_found'};
+    saveDirectoryCache(info,result);
+    return result;
+  }catch(e){
+    return{serviceConfigured:true,found:false,status:'unavailable',error:true};
+  }
+}
+
+function mergeDirectory(base,data){
+  if(!data)return{...base,lookupState:'unavailable'};
+  if(data.found){
+    return{
+      ...base,
+      title:data.title||data.name||'Possible caller',
+      eyebrow:'Directory match',
+      location:data.location||base.location,
+      type:data.type||base.type,
+      source:data.source||(data.provider?`Matched by ${data.provider}.`:'Directory identity returned.'),
+      confidence:data.confidence||'Directory match',
+      provider:data.provider||'',
+      found:true,
+      lookupState:'found',
+      fromCache:Boolean(data.fromCache),
+      date:Date.now()
+    };
+  }
+
+  let title='No directory match';
+  let source='No identity was returned by the directory for this number.';
+  let state='not_found';
+
+  if(data.status==='unconfigured'||data.serviceConfigured===false){
+    title='Directory not connected';
+    source='Number details are available, but the automatic reverse-directory service has not been connected yet.';
+    state='unconfigured';
+  }else if(data.status==='unavailable'||data.error){
+    title='Directory unavailable';
+    source='The directory could not be reached. Refresh and retry, or use a deeper search.';
+    state='unavailable';
+  }
+
+  return{
+    ...base,title,eyebrow:'Directory check',
+    location:data.location||base.location,
+    type:data.type||base.type,
+    source:data.source||source,
+    confidence:data.confidence||'',
+    found:false,lookupState:state,date:Date.now()
+  };
+}
+
+function setFallbackVisibility(item,expanded=false){
+  currentResult=item;
+  const found=Boolean(item&&item.found);
+  const reveal=!found||expanded;
+  els.fallbackActions.classList.toggle('hidden',!reveal);
+  els.searchDeeperButton.classList.toggle('hidden',!found||expanded);
+
+  if(found){
+    els.fallbackLabel.textContent='Want to verify it further?';
+    els.refreshDirectoryButton.textContent='Recheck directory';
+  }else if(item&&item.lookupState==='unavailable'){
+    els.fallbackLabel.textContent='The directory did not answer.';
+    els.refreshDirectoryButton.textContent='Refresh directory & retry';
+  }else if(item&&item.lookupState==='unconfigured'){
+    els.fallbackLabel.textContent='Automatic directory lookup is not connected yet.';
+    els.refreshDirectoryButton.textContent='Retry directory';
+  }else{
+    els.fallbackLabel.textContent='No directory identity found.';
+    els.refreshDirectoryButton.textContent='Refresh directory & retry';
+  }
+}
+
+function renderResult(item,{expanded=false}={}){
+  els.resultNumber.textContent=item.display||item.e164;
+  els.resultEyebrow.textContent=item.eyebrow||'Directory check';
+  els.resultTitle.textContent=item.title||'Unknown caller';
+  els.resultLocation.textContent=item.location||'';
+  els.resultType.textContent=item.type||'';
+  els.resultSource.textContent=item.source||'';
+  els.resultConfidence.textContent=item.confidence||'';
+  setFallbackVisibility(item,expanded);
+}
+
+async function doSearch(options={}){
+  const info=normalizeNumber(els.phoneInput.value);
+  if(!info||!info.valid)return;
+  currentInfo=info;
+
+  const old=findHistory(info);
+  const base=old?{...baseResult(info),...old,date:Date.now()}:baseResult(info);
+
+  els.searchButton.disabled=true;
+  const label=els.searchButton.querySelector('span:first-child');
+  const original=label.textContent;
+  label.textContent=options.refresh?'Refreshing…':'Checking directory…';
+
+  const directory=await automaticLookup(info,{refresh:Boolean(options.refresh)});
+  const item=mergeDirectory(base,directory);
+
+  saveHistory(item);
+  renderResult(item);
+  showScreen(els.result);
+
+  label.textContent=original;
+  updateInputState();
+}
 function webSearchUrl(info){const q=[`"${info.e164}"`,info.national?`"${info.national}"`:null,'caller OR phone OR contact'].filter(Boolean).join(' OR ');return'https://www.google.com/search?q='+encodeURIComponent(q)}
 function whatsappUrl(info){return'https://wa.me/'+info.digits}
 function renderCountryList(){const current=homeCountry().code;els.countryList.innerHTML=COUNTRIES.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(c=>`<button type="button" data-country="${c.code}"><span class="country-name">${c.flag} ${escapeHtml(c.name)}${c.code===current?' ·':''}</span><span class="dial">+${c.dial}</span></button>`).join('')}
@@ -45,7 +226,9 @@ function renderHistory(){const items=history();if(!items.length){els.historyList
 async function pasteNumber(){try{const text=await navigator.clipboard.readText();if(text){els.phoneInput.value=text.trim();updateInputState();els.phoneInput.focus()}}catch(e){els.phoneInput.focus()}}
 function setupInstallGate(){if(isStandalone()){showScreen(els.welcome);return}showScreen(els.installGate);const isiOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);if(isiOS){els.installButton.textContent='How to install';els.installCopy.textContent='uRang works from your Home Screen, not inside Safari.'}window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstallPrompt=e});els.installButton.addEventListener('click',async()=>{if(deferredInstallPrompt){deferredInstallPrompt.prompt();try{await deferredInstallPrompt.userChoice}catch(e){}deferredInstallPrompt=null}else els.iosInstructions.classList.toggle('hidden')})}
 
-els.enterApp.addEventListener('click',()=>showScreen(els.search));els.phoneInput.addEventListener('input',updateInputState);els.phoneInput.addEventListener('keydown',e=>{if(e.key==='Enter'&&!els.searchButton.disabled)doSearch()});els.clearInput.addEventListener('click',()=>{els.phoneInput.value='';updateInputState();els.phoneInput.focus()});els.searchButton.addEventListener('click',doSearch);els.pasteButton.addEventListener('click',pasteNumber);els.previousResult.addEventListener('click',()=>{const info=normalizeNumber(els.phoneInput.value),old=findHistory(info);if(old){currentInfo=info;renderResult(old);showScreen(els.result)}});els.countryButton.addEventListener('click',()=>{renderCountryList();showScreen(els.country)});els.historyButton.addEventListener('click',()=>{renderHistory();showScreen(els.history)});els.aboutButton.addEventListener('click',()=>showScreen(els.about));els.searchAgain.addEventListener('click',()=>{showScreen(els.search);setTimeout(()=>els.phoneInput.focus(),180)});els.webResearchButton.addEventListener('click',()=>{const info=currentInfo||normalizeNumber(els.resultNumber.textContent);if(info)window.open(webSearchUrl(info),'_blank','noopener,noreferrer')});els.whatsappButton.addEventListener('click',()=>{const info=currentInfo||normalizeNumber(els.resultNumber.textContent);if(info)location.href=whatsappUrl(info)});
+els.enterApp.addEventListener('click',()=>showScreen(els.search));els.phoneInput.addEventListener('input',updateInputState);els.phoneInput.addEventListener('keydown',e=>{if(e.key==='Enter'&&!els.searchButton.disabled)doSearch()});els.clearInput.addEventListener('click',()=>{els.phoneInput.value='';updateInputState();els.phoneInput.focus()});els.searchButton.addEventListener('click',doSearch);els.pasteButton.addEventListener('click',pasteNumber);els.previousResult.addEventListener('click',()=>{const info=normalizeNumber(els.phoneInput.value),old=findHistory(info);if(old){currentInfo=info;renderResult(old);showScreen(els.result)}});els.countryButton.addEventListener('click',()=>{renderCountryList();showScreen(els.country)});els.historyButton.addEventListener('click',()=>{renderHistory();showScreen(els.history)});els.aboutButton.addEventListener('click',()=>showScreen(els.about));els.searchAgain.addEventListener('click',()=>{showScreen(els.search);setTimeout(()=>els.phoneInput.focus(),180)});
+els.searchDeeperButton.addEventListener('click',()=>{if(currentResult)setFallbackVisibility(currentResult,true)});
+els.refreshDirectoryButton.addEventListener('click',()=>doSearch({refresh:true}));els.webResearchButton.addEventListener('click',()=>{const info=currentInfo||normalizeNumber(els.resultNumber.textContent);if(info)window.open(webSearchUrl(info),'_blank','noopener,noreferrer')});els.whatsappButton.addEventListener('click',()=>{const info=currentInfo||normalizeNumber(els.resultNumber.textContent);if(info)location.href=whatsappUrl(info)});
 document.addEventListener('click',e=>{const c=e.target.closest('[data-country]');if(c){setHomeCountry(c.dataset.country);updateInputState();showScreen(els.search)}const h=e.target.closest('[data-history]');if(h){const item=history()[Number(h.dataset.history)];if(item){els.phoneInput.value=item.e164;currentInfo=normalizeNumber(item.e164);renderResult(item);showScreen(els.result)}}const back=e.target.closest('[data-back]');if(back)showScreen(els.search)});
 window.addEventListener('appinstalled',()=>{els.installCopy.textContent='Installed. Open uRang from your Home Screen.';els.installButton.classList.add('hidden');els.iosInstructions.classList.add('hidden')});
-renderCountry();updateInputState();setupInstallGate();if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+renderCountry();updateInputState();setupInstallGate();if(CONFIG.refreshDirectoryStatusOnOpen)refreshDirectoryStatus(false);if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));

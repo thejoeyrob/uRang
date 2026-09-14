@@ -22,3 +22,40 @@ button,input{font:inherit;color:inherit}button{border:0;background:none;padding:
 @media(max-height:720px){.top-brand{padding-top:22px}.search-layout{margin-top:30px}.search-action{margin-top:38px}.paste-action{margin-top:28px}.result-brand{padding-top:18px}.result-content{margin-top:25px}.result-source{margin-top:16px}.result-actions .text-action{margin:12px auto}}
 @media(min-width:760px){.screen{padding-left:max(8vw,60px);padding-right:max(8vw,60px)}.welcome-stack,.install-inner{max-width:560px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}}
+
+
+/* v1.5 — directory-first progressive disclosure */
+.deeper-actions{
+  width:min(460px,100%);
+  margin:2px auto 0;
+  padding-top:12px;
+  border-top:1px solid rgba(255,255,255,.17);
+}
+.deeper-label{
+  margin:4px 0 18px;
+  font-size:13px;
+  line-height:1.35;
+  letter-spacing:.02em;
+  color:rgba(255,255,255,.48);
+}
+.result-actions #searchDeeperButton{
+  font-size:21px;
+  font-weight:420;
+}
+.result-actions #refreshDirectoryButton{
+  font-size:18px;
+  color:rgba(255,255,255,.88);
+}
+.directory-status{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+}
+.directory-status::before{
+  content:"";
+  width:6px;
+  height:6px;
+  border-radius:50%;
+  background:currentColor;
+  opacity:.75;
+}

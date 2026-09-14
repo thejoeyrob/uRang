@@ -1,0 +1,27 @@
+uRang v1.5 — Directory backend
+
+The PWA cannot safely contain a reverse-directory API key. The included
+backend-lookup-worker.js is the companion serverless function.
+
+Recommended low-cost/personal route:
+1. Create a free IPQualityScore account and obtain an API key.
+2. Create a free Cloudflare account and deploy backend-lookup-worker.js as a Worker.
+3. Add IPQS_API_KEY to the Worker as a secret.
+4. Optionally set ALLOWED_ORIGIN to the HTTPS address where uRang is hosted.
+5. Put the Worker /lookup URL into config.js as lookupApi.
+6. Re-upload the flat PWA files.
+
+uRang then:
+- determines the number's country locally;
+- sends only the searched number + country to the Worker;
+- the Worker selects the configured directory route;
+- successful results are cached locally and server-side;
+- failed matches expire quickly;
+- "Refresh directory & retry" bypasses the cache;
+- WhatsApp and public web research remain hidden until directory lookup fails,
+  or until the user explicitly taps "Search deeper" after a successful match.
+
+The /status endpoint is lightweight. uRang may refresh it on app open, but it
+does not download a full identity directory.
+
+No API keys belong in config.js or any public PWA file.

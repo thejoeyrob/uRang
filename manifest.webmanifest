@@ -1,7 +1,7 @@
 {
   "name": "uRang \u2014 Know before you call back",
   "short_name": "uRang",
-  "description": "Paste an unfamiliar phone number and get concise caller context.",
+  "description": "Find out who rang with a country-routed reverse-directory check first, then optional deeper research.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
