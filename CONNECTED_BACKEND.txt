@@ -1,0 +1,25 @@
+uRang v1.6 connected backend
+
+Live endpoint:
+https://uneqycntlykjedaaynou.supabase.co/functions/v1/urang-lookup
+
+Status:
+https://uneqycntlykjedaaynou.supabase.co/functions/v1/urang-lookup?mode=status
+
+What works now:
+- PWA -> server-side lookup connectivity
+- international E.164 validation
+- country identification
+- line-type identification where numbering metadata supports it
+- fallback flow after no identity result
+
+Reverse identity:
+The deployed function already contains IPQS support. It becomes active automatically
+once an Edge Function secret named IPQS_API_KEY is added in Supabase.
+
+No API key is stored in the PWA or this repository.
+
+Important:
+The current Supabase function is hosted as a separate Edge Function in the user's
+existing Supabase project. It does not read or write any Danco database tables.
+A dedicated uRang Supabase project can be created later if desired.
