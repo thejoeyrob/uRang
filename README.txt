@@ -1,47 +1,32 @@
-uRang PWA — v1.0
+uRang PWA — v1.4.0
+A JW EDS product
 
-WHAT THIS BUILD DOES
-- Browser mode is locked to an install screen.
-- Installed/Home Screen standalone mode opens the actual uRang app.
-- Coral minimalist welcome screen closely matches the approved visual.
-- Phone number paste/input.
-- Home-country detection from browser locale, with a minimal country selector.
-- Converts domestic numbers to international form for research.
-- Identifies likely origin country.
-- Adds useful UK mobile/landline/service classification and selected UK landline area hints.
-- Remembers previous searches on-device and shows the previous result before Search is pressed.
-- Local/Web mode.
-- If Local finds no previous uRang match, Web becomes the next active path.
-- WhatsApp handoff for the user's existing manual identity check.
-- Public web-search handoff with both international and domestic number variants.
-- Offline app shell via service worker.
-- No login and no analytics.
+THIS IS THE IPHONE-FRIENDLY PWA BUILD
 
-IMPORTANT iPHONE LIMITATION
-A PWA on iPhone cannot enumerate/search the user's Contacts, Messages, Notes, call log or WhatsApp database.
-The interface has deliberately been built so the same PWA can later be wrapped in a native iOS shell
-(e.g. Capacitor) and a Contacts permission module added without redesigning the app.
+Install behaviour
+- Browser/Safari view is an install screen only.
+- Add uRang to the Home Screen and launch it from the icon to use the app.
+- The icon uses the full uRang wordmark.
 
-ONLINE RESEARCH
-This static build does not embed a paid search API key in browser JavaScript (that would expose the secret).
-"Search the web" creates a real public search using multiple number representations. For fully automatic
-in-app web-result aggregation, connect app.js to a small server-side search endpoint later.
+What works without any paid service
+- Paste/type a missed-call number.
+- Domestic/international normalisation.
+- Country of origin.
+- UK mobile/landline/service classification.
+- Selected UK geographic landline area hints.
+- Previous-search memory and Recent list stored only on the device.
+- Previous result appears before Search when the number is recognised.
+- WhatsApp handoff for the user's manual name/photo check.
+- Exact-number public web research using both international and local forms.
+- Offline app shell after first load.
+- About page with JW EDS branding and version.
 
-INSTALL / HOST
-1. Upload ALL files in this ZIP to the same public web folder (flat, no nested directories).
-2. Serve over HTTPS (GitHub Pages, Cloudflare Pages, Netlify, etc.).
-3. Open the URL on the phone.
-4. Browser mode will show Install to continue.
-5. iPhone/iPad: Share > Add to Home Screen > keep "Open as Web App" enabled > Add.
-6. Launch uRang from the Home Screen.
+Automatic reverse lookup
+config.js contains lookupApi. Leave it blank for the static version. When a server-side reverse-lookup endpoint is available, set the HTTPS URL there. uRang will then call it automatically during the same single Search action and merge the result into the concise result screen. No redesign is required.
 
-FILES
-index.html
-styles.css
-app.js
-manifest.webmanifest
-sw.js
-icon-192.png
-icon-512.png
-apple-touch-icon.png
-README.txt
+Important iPhone limitation
+Installed iPhone PWAs cannot search the user's Contacts database. That is the only major local capability deliberately omitted. A later native/App Store uRang build can add Contacts permission while retaining this interface.
+
+HOSTING
+Upload ALL files from this ZIP to the same HTTPS folder. GitHub Pages, Cloudflare Pages or Netlify are suitable static hosts.
+On iPhone: open the URL in Safari > Share > Add to Home Screen > Open as Web App > Add.

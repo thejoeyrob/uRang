@@ -15,131 +15,125 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <main id="app" aria-live="polite">
-    <!-- Browser-only install gate -->
-    <section id="installGate" class="screen install-gate hidden">
-      <div class="install-inner">
-        <div class="brand compact" aria-label="uRang">
-          <div class="signal" aria-hidden="true"><i></i><i></i><i></i></div>
-          <div class="wordmark">uRang</div>
-        </div>
-        <p class="install-kicker">Find out who called.</p>
-        <div class="install-rule"></div>
-        <h1>Install to continue</h1>
-        <p id="installCopy" class="install-copy">
-          uRang works from your Home Screen, not inside the browser.
-        </p>
-        <button id="installButton" class="text-action strong" type="button">Install uRang</button>
-        <div id="iosInstructions" class="ios-instructions hidden">
-          <p>Tap <strong>Share</strong> in your browser.</p>
-          <p>Choose <strong>Add to Home Screen</strong>.</p>
-          <p>Keep <strong>Open as Web App</strong> enabled, then tap <strong>Add</strong>.</p>
-        </div>
-        <p class="privacy-note">No account. Search history stays on this device.</p>
-      </div>
-    </section>
-
-    <!-- Installed welcome -->
-    <section id="welcomeScreen" class="screen welcome hidden">
-      <div class="welcome-stack">
-        <p class="find-out">Find out…</p>
-        <div class="brand hero" aria-label="uRang">
-          <div class="signal" aria-hidden="true"><i></i><i></i><i></i></div>
-          <div class="wordmark">uRang</div>
-        </div>
-        <button id="enterApp" class="swipe-action" type="button">
-          <span>Who called?</span>
-          <span class="shimmer" aria-hidden="true"></span>
-        </button>
-      </div>
-    </section>
-
-    <!-- Main lookup -->
-    <section id="searchScreen" class="screen search-screen hidden">
-      <div class="top-brand brand compact">
-        <div class="signal" aria-hidden="true"><i></i><i></i><i></i></div>
-        <div class="wordmark">uRang</div>
-        <p>Find out who called</p>
-      </div>
-
-      <div class="search-layout">
-        <label class="phone-entry" for="phoneInput">
-          <input id="phoneInput" type="tel" inputmode="tel" autocomplete="tel"
-                 placeholder="Paste a number" aria-label="Phone number">
-          <button id="clearInput" class="clear-input hidden" type="button" aria-label="Clear number">×</button>
-        </label>
-
-        <button id="previousResult" class="previous-result hidden" type="button"></button>
-
-        <div class="mode-switch" role="tablist" aria-label="Search type">
-          <button id="localMode" class="mode active" role="tab" aria-selected="true" type="button">Local</button>
-          <span aria-hidden="true">|</span>
-          <button id="webMode" class="mode" role="tab" aria-selected="false" type="button">Web</button>
-        </div>
-
-        <button id="searchButton" class="swipe-action search-action" type="button" disabled>
-          <span>Search</span>
-          <span class="shimmer" aria-hidden="true"></span>
-        </button>
-
-        <button id="pasteButton" class="micro-action" type="button">Paste a number</button>
-      </div>
-
-      <div class="bottom-line">
-        <button id="countryButton" class="micro-action country-action" type="button" aria-label="Change home country">
-          <span id="countryFlag">🇬🇧</span> <span id="countryLabel">United Kingdom</span>
-        </button>
-        <button id="historyButton" class="micro-action" type="button">Recent</button>
-      </div>
-    </section>
-
-    <!-- Country chooser: deliberately inline, not a floating modal -->
-    <section id="countryScreen" class="screen list-screen hidden">
-      <header class="list-header">
-        <button class="back-link" data-back="search" type="button">‹ Back</button>
-        <h2>Home country</h2>
-      </header>
-      <div class="list-content">
-        <p class="list-intro">Used only to understand numbers without an international prefix.</p>
-        <div id="countryList" class="country-list"></div>
-      </div>
-    </section>
-
-    <!-- History -->
-    <section id="historyScreen" class="screen list-screen hidden">
-      <header class="list-header">
-        <button class="back-link" data-back="search" type="button">‹ Back</button>
-        <h2>Recent</h2>
-      </header>
-      <div id="historyList" class="list-content"></div>
-    </section>
-
-    <!-- Result -->
-    <section id="resultScreen" class="screen result-screen hidden">
-      <div class="brand compact result-brand">
+<main id="app" aria-live="polite">
+  <section id="installGate" class="screen install-gate hidden">
+    <div class="install-inner">
+      <div class="brand compact" aria-label="uRang">
         <div class="signal" aria-hidden="true"><i></i><i></i><i></i></div>
         <div class="wordmark">uRang</div>
       </div>
-
-      <div class="result-content">
-        <p id="resultNumber" class="result-number"></p>
-        <div class="glow-rule"></div>
-        <p id="resultEyebrow" class="result-eyebrow">Number details</p>
-        <h1 id="resultTitle"></h1>
-        <p id="resultLocation" class="result-line"></p>
-        <p id="resultType" class="result-line"></p>
-        <p id="resultSource" class="result-source"></p>
-        <p id="resultConfidence" class="confidence"></p>
+      <p class="install-kicker">Find out who called.</p>
+      <div class="fine-rule"></div>
+      <h1>Install to continue</h1>
+      <p id="installCopy" class="install-copy">uRang works from your Home Screen, not inside the browser.</p>
+      <button id="installButton" class="text-action strong" type="button">Install uRang</button>
+      <div id="iosInstructions" class="ios-instructions hidden">
+        <p>Tap <strong>Share</strong> in Safari.</p>
+        <p>Choose <strong>Add to Home Screen</strong>.</p>
+        <p>Keep <strong>Open as Web App</strong> enabled, then tap <strong>Add</strong>.</p>
       </div>
+      <p class="privacy-note">No account. Search history stays on this device.</p>
+    </div>
+  </section>
 
-      <div class="result-actions">
-        <button id="whatsappButton" class="text-action hidden" type="button">Check WhatsApp</button>
-        <button id="webResearchButton" class="text-action hidden" type="button">Search the web</button>
-        <button id="searchAgain" class="text-action" type="button">Search again</button>
+  <section id="welcomeScreen" class="screen welcome hidden">
+    <div class="welcome-stack">
+      <p class="find-out">Find out…</p>
+      <div class="brand hero" aria-label="uRang">
+        <div class="signal" aria-hidden="true"><i></i><i></i><i></i></div>
+        <div class="wordmark">uRang</div>
       </div>
-    </section>
-  </main>
+      <button id="enterApp" class="swipe-action" type="button">
+        <span>Who called?</span><span class="shimmer" aria-hidden="true"></span>
+      </button>
+    </div>
+  </section>
 
-  <script src="app.js"></script>
+  <section id="searchScreen" class="screen search-screen hidden">
+    <div class="top-brand brand compact">
+      <div class="signal" aria-hidden="true"><i></i><i></i><i></i></div>
+      <div class="wordmark">uRang</div>
+      <p>Find out who called</p>
+    </div>
+
+    <div class="search-layout">
+      <label class="phone-entry" for="phoneInput">
+        <input id="phoneInput" type="tel" inputmode="tel" autocomplete="tel" placeholder="Paste a number" aria-label="Phone number">
+        <button id="clearInput" class="clear-input hidden" type="button" aria-label="Clear number">×</button>
+      </label>
+      <button id="previousResult" class="previous-result hidden" type="button"></button>
+      <p id="numberHint" class="number-hint hidden"></p>
+
+      <button id="searchButton" class="swipe-action search-action" type="button" disabled>
+        <span>Search</span><span class="shimmer" aria-hidden="true"></span>
+      </button>
+      <button id="pasteButton" class="micro-action paste-action" type="button">Paste a number</button>
+    </div>
+
+    <div class="bottom-line">
+      <button id="countryButton" class="micro-action country-action" type="button" aria-label="Change home country">
+        <span id="countryFlag">🇬🇧</span> <span id="countryLabel">United Kingdom</span>
+      </button>
+      <button id="aboutButton" class="micro-action" type="button">About</button>
+      <button id="historyButton" class="micro-action" type="button">Recent</button>
+    </div>
+  </section>
+
+  <section id="countryScreen" class="screen list-screen hidden">
+    <header class="list-header"><button class="back-link" data-back="search" type="button">‹ Back</button><h2>Home country</h2></header>
+    <div class="list-content">
+      <p class="list-intro">Used to understand numbers pasted without an international prefix.</p>
+      <div id="countryList" class="country-list"></div>
+    </div>
+  </section>
+
+  <section id="historyScreen" class="screen list-screen hidden">
+    <header class="list-header"><button class="back-link" data-back="search" type="button">‹ Back</button><h2>Recent</h2></header>
+    <div id="historyList" class="list-content"></div>
+  </section>
+
+  <section id="aboutScreen" class="screen about-screen hidden">
+    <header class="list-header about-header"><button class="back-link" data-back="search" type="button">‹ Back</button><h2>About</h2></header>
+    <div class="about-content">
+      <div class="brand compact about-brand" aria-label="uRang">
+        <div class="signal" aria-hidden="true"><i></i><i></i><i></i></div>
+        <div class="wordmark">uRang</div>
+      </div>
+      <p class="about-tagline">Know before you call back.</p>
+      <p class="version">Version 1.4.0 · PWA</p>
+      <div class="fine-rule"></div>
+      <p class="about-copy">A fast, privacy-minded way to understand an unfamiliar caller using number intelligence, previous searches and public information.</p>
+      <p class="about-note">On iPhone, web apps cannot search your Contacts. A future native uRang version can add that permission without changing this experience.</p>
+      <div class="jw-brand"><p>Built by</p><img src="jw-eds-white.png" alt="JW EDS"><strong>JW EDS</strong></div>
+      <p class="about-foot">A JW EDS product · Privacy by design</p>
+    </div>
+  </section>
+
+  <section id="resultScreen" class="screen result-screen hidden">
+    <div class="brand compact result-brand">
+      <div class="signal" aria-hidden="true"><i></i><i></i><i></i></div>
+      <div class="wordmark">uRang</div>
+    </div>
+
+    <div class="result-content">
+      <p id="resultNumber" class="result-number"></p>
+      <div class="fine-rule"></div>
+      <p id="resultEyebrow" class="result-eyebrow">Number details</p>
+      <h1 id="resultTitle"></h1>
+      <p id="resultLocation" class="result-line"></p>
+      <p id="resultType" class="result-line"></p>
+      <p id="resultSource" class="result-source"></p>
+      <p id="resultConfidence" class="confidence"></p>
+    </div>
+
+    <div class="result-actions">
+      <button id="whatsappButton" class="text-action" type="button">Check WhatsApp</button>
+      <button id="webResearchButton" class="text-action" type="button">Research online</button>
+      <button id="searchAgain" class="text-action quieter" type="button">Search again</button>
+    </div>
+  </section>
+</main>
+<script src="config.js"></script>
+<script src="app.js"></script>
 </body>
 </html>

@@ -1,7 +1,7 @@
 {
-  "name": "uRang \u2014 Find out who called",
+  "name": "uRang \u2014 Know before you call back",
   "short_name": "uRang",
-  "description": "A simple phone-number lookup assistant.",
+  "description": "Paste an unfamiliar phone number and get concise caller context.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
